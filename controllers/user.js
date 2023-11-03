@@ -1,8 +1,18 @@
 const userModel = require("../models/user.js");
 const bcrypt = require("bcryptjs");
-// const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const passwordRegex = /^(?=.*\d).{6,}$/;
+
+const authenticationUser = (req, res) => {
+  const token = req.headers.authorization_refresh;
+  jwt.verify(token, process.env.JWT_SECRET_refresh, (err) => {
+    if (err) {
+      return res.status(401).json({ message: "Bad auth" });
+    }
+    return;
+  });
+};
 
 const ADD_USER = async (req, res) => {
   try {
@@ -10,7 +20,7 @@ const ADD_USER = async (req, res) => {
     const hash = bcrypt.hashSync(req.body.password, salt);
     const userName = req.body.name;
     const userCorrectName =
-      userName.charAt(0).toUpperCase() + userName.slice(1);
+      userName.charAt(0).toUpperCase() + userName.slice(1).trim();
     if (!emailRegex.test(req.body.email)) {
       return res.status(400).json({ status: "Email is not correct" });
     }
@@ -36,4 +46,69 @@ const ADD_USER = async (req, res) => {
   }
 };
 
-module.exports = { ADD_USER };
+const REFRESH_USER_LOGIN = async (req, res) => {
+  try {
+    const user = await userModel.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(404).json({ message: "Bad authentication" });
+    }
+    bcrypt.compare(req.body.password, user.password, (err, isPasswordMatch) => {
+      if (!isPasswordMatch || err) {
+        return res.status(404).json({ message: "Bad authentication" });
+      }
+      const refreshToken = jwt.sign(
+        { email: user.email, userId: user._id },
+        process.env.JWT_SECRET_refresh,
+        { expiresIn: "24h" },
+        { algorithm: "RS256" }
+      );
+      return res.status(200).json({ refreshToken });
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+const USER_LOGIN = async (req, res) => {
+  try {
+    const user = await userModel.findOne({ email: req.body.email });
+    if (!user) {
+      return res.status(404).json({ message: "Bad authentication" });
+    }
+    bcrypt.compare(req.body.password, user.password, (err, isPasswordMatch) => {
+      if (!isPasswordMatch || err) {
+        return res.status(404).json({ message: "Bad authentication" });
+      }
+      if (authenticationUser) {
+        const token = jwt.sign(
+          { email: user.email, userId: user._id },
+          process.env.JWT_SECRET,
+          { expiresIn: "2h" },
+          { algorithm: "RS256" }
+        );
+        return res.status(200).json({ token });
+      } else {
+        return res.status(400).json({ message: "Something went wrong" });
+      }
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Something went wrong" });
+  }
+};
+
+const GET_USERS = async (req, res) => {
+  try {
+    const response = await userModel.find();
+    const sortedResponse = response.sort((a, b) => {
+      return a.title > b.title ? 1 : -1;
+    });
+    return res.send({ users: sortedResponse });
+  } catch (err) {
+    console.log("ERROR: ", err);
+    res.status(500).json({ response: "Something went wrong!" });
+  }
+};
+
+module.exports = { ADD_USER, REFRESH_USER_LOGIN, USER_LOGIN, GET_USERS };
