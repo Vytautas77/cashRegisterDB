@@ -4,6 +4,12 @@ const userRegistrationSchema = joi.object({
   name: joi.string().required(),
   email: joi.string().required(),
   password: joi.string().required(),
-  moneyBalance: joi.string().required(),
+  boughtTickets: joi.array().required(),
+  moneyBalance: joi.number().required(),
 });
-module.exports = { userRegistrationSchema };
+
+const userLoginSchema = joi.object({
+  email: joi.string().required(),
+  password: joi.string().required(),
+});
+module.exports = { userRegistrationSchema, userLoginSchema };

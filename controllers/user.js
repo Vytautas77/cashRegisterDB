@@ -102,7 +102,7 @@ const GET_USERS = async (req, res) => {
   try {
     const response = await userModel.find();
     const sortedResponse = response.sort((a, b) => {
-      return a.title > b.title ? 1 : -1;
+      return a.name > b.name ? 1 : -1;
     });
     return res.send({ users: sortedResponse });
   } catch (err) {
@@ -111,4 +111,20 @@ const GET_USERS = async (req, res) => {
   }
 };
 
-module.exports = { ADD_USER, REFRESH_USER_LOGIN, USER_LOGIN, GET_USERS };
+const GET_USER_BY_ID = async (req, res) => {
+  try {
+    const response = await userModel.findById(req.params.id);
+    return res.status(200).json({ Event: response });
+  } catch (err) {
+    console.log("ERROR: ", err);
+    res.status(500).json({ response: "Something went wrong!" });
+  }
+};
+
+module.exports = {
+  ADD_USER,
+  REFRESH_USER_LOGIN,
+  USER_LOGIN,
+  GET_USERS,
+  GET_USER_BY_ID,
+};
