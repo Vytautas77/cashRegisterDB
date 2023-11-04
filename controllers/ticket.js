@@ -20,4 +20,53 @@ const ADD_TICKET = async (req, res) => {
   }
 };
 
-module.exports = { ADD_TICKET };
+const GET_TICKETS = async (req, res) => {
+  try {
+    const response = await ticketModel.find();
+    return res.send({ tickets: response });
+  } catch (err) {
+    console.log("ERROR: ", err);
+    res.status(500).json({ response: "Something went wrong!" });
+  }
+};
+
+const GET_TICKET_BY_ID = async (req, res) => {
+  try {
+    const response = await ticketModel.findById(req.params.id);
+    return res.status(200).json({ response });
+  } catch (err) {
+    console.log("ERROR: ", err);
+    res.status(500).json({ response: "Something went wrong!" });
+  }
+};
+
+const UPDATE_TICKET = async (req, res) => {
+  try {
+    const response = await ticketModel.updateOne(
+      { _id: req.params.id },
+      { ...req.body }
+    );
+    return res.status(200).json({ status: "Ticket was update", response });
+  } catch (err) {
+    console.log("ERROR: ", err);
+    res.status(500).json({ response: "Something went wrong!" });
+  }
+};
+
+const DELETE_TICKET = async (req, res) => {
+  try {
+    const response = await ticketModel.findByIdAndDelete(req.params.id);
+    return res.status(200).json({ status: "Ticket was deleted", response });
+  } catch (err) {
+    console.log("ERROR: ", err);
+    res.status(500).json({ response: "Something went wrong!" });
+  }
+};
+
+module.exports = {
+  ADD_TICKET,
+  GET_TICKETS,
+  GET_TICKET_BY_ID,
+  UPDATE_TICKET,
+  DELETE_TICKET,
+};

@@ -46,7 +46,7 @@ const ADD_USER = async (req, res) => {
   }
 };
 
-const REFRESH_USER_LOGIN = async (req, res) => {
+const USER_LOGIN = async (req, res) => {
   try {
     const user = await userModel.findOne({ email: req.body.email });
     if (!user) {
@@ -58,7 +58,7 @@ const REFRESH_USER_LOGIN = async (req, res) => {
       }
       const refreshToken = jwt.sign(
         { email: user.email, userId: user._id },
-        process.env.JWT_SECRET_refresh,
+        process.env.JWT_SECRET,
         { expiresIn: "24h" },
         { algorithm: "RS256" }
       );
@@ -70,7 +70,7 @@ const REFRESH_USER_LOGIN = async (req, res) => {
   }
 };
 
-const USER_LOGIN = async (req, res) => {
+const USER_LOGIN_REFRESH = async (req, res) => {
   try {
     const user = await userModel.findOne({ email: req.body.email });
     if (!user) {
@@ -83,7 +83,7 @@ const USER_LOGIN = async (req, res) => {
       if (authenticationUser) {
         const token = jwt.sign(
           { email: user.email, userId: user._id },
-          process.env.JWT_SECRET,
+          process.env.JWT_SECRET_REFRESH,
           { expiresIn: "2h" },
           { algorithm: "RS256" }
         );
@@ -123,8 +123,8 @@ const GET_USER_BY_ID = async (req, res) => {
 
 module.exports = {
   ADD_USER,
-  REFRESH_USER_LOGIN,
   USER_LOGIN,
+  USER_LOGIN_REFRESH,
   GET_USERS,
   GET_USER_BY_ID,
 };
