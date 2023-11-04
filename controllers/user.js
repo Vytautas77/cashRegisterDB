@@ -3,10 +3,11 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const passwordRegex = /^(?=.*\d).{6,}$/;
+const mongoose = require("mongoose");
 
 const authenticationUser = (req, res) => {
   const token = req.headers.authorization_refresh;
-  jwt.verify(token, process.env.JWT_SECRET_refresh, (err) => {
+  jwt.verify(token, process.env.JWT_SECRET, (err) => {
     if (err) {
       return res.status(401).json({ message: "Bad auth" });
     }
@@ -56,13 +57,13 @@ const USER_LOGIN = async (req, res) => {
       if (!isPasswordMatch || err) {
         return res.status(404).json({ message: "Bad authentication" });
       }
-      const refreshToken = jwt.sign(
+      const Token = jwt.sign(
         { email: user.email, userId: user._id },
         process.env.JWT_SECRET,
         { expiresIn: "24h" },
         { algorithm: "RS256" }
       );
-      return res.status(200).json({ refreshToken });
+      return res.status(200).json({ Token });
     });
   } catch (err) {
     console.log(err);
@@ -121,10 +122,54 @@ const GET_USER_BY_ID = async (req, res) => {
   }
 };
 
+const GET_USERS_TICKET = async (req, res) => {
+  try {
+    const response = await userModel.aggregate([
+      {
+        $lookup: {
+          from: "tickets",
+          localField: "boughtTickets",
+          foreignField: "id",
+          as: "Tickets",
+        },
+      },
+      // { $match: { _id: new mongoose.Types.ObjectId(req.params.id) } },
+    ]);
+
+    return res.status(200).json({ response });
+  } catch (err) {
+    console.log("ERROR: ", err);
+    res.status(500).json({ response: "Something went wrong!" });
+  }
+};
+
+const GET_USERS_BY_ID_TICKET = async (req, res) => {
+  try {
+    const response = await userModel.aggregate([
+      {
+        $lookup: {
+          from: "tickets",
+          localField: "boughtTickets",
+          foreignField: "id",
+          as: "Tickets",
+        },
+      },
+      { $match: { _id: new mongoose.Types.ObjectId(req.params.id) } },
+    ]);
+
+    return res.status(200).json({ response });
+  } catch (err) {
+    console.log("ERROR: ", err);
+    res.status(500).json({ response: "Something went wrong!" });
+  }
+};
+
 module.exports = {
   ADD_USER,
   USER_LOGIN,
   USER_LOGIN_REFRESH,
   GET_USERS,
   GET_USER_BY_ID,
+  GET_USERS_TICKET,
+  GET_USERS_BY_ID_TICKET,
 };

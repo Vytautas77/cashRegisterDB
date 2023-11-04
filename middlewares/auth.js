@@ -13,6 +13,7 @@ const authenticationUser = (req, res, next) => {
         return res.status(401).json({ message: "Bad auth" });
       }
       req.body.userId = decoded.userId;
+
       return next();
     });
   } catch (err) {
