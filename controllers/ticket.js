@@ -83,7 +83,7 @@ const BUY_TICKET = async (req, res) => {
       return res.status(404).json({ message: "No money" });
     }
     await userModel
-      .updateOne({ _id: user }, { $push: { boughtTickets: req.params.id } })
+      .updateOne({ _id: ticket._id }, { $push: { boughtTickets: userId } })
       .exec();
 
     return res.status(200).json({ message: "The ticket has been purchased" });
